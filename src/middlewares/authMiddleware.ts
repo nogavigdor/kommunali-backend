@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import admin from '../config/firebase'; // Import the initialized Firebase Admin instance
+import admin from '.././config/firebase'; // Import the initialized Firebase Admin instance
 
 export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split('Bearer ')[1]; // Extract the token from the Authorization header
