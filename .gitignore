@@ -3,4 +3,4 @@ dist/
 .env
 .DS_Store
 # Ignore Firebase service account file
-config/firebase-adminsdk.json
+src/config/firebase-adminsdk.json
