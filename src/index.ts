@@ -1,12 +1,16 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import userRoutes from './routes/userRoutes';
+import storeRoutes from './routes/storeRoutes';
+import productRoutes from './routes/productRoutes';
+import setupSwagger from './swagger'; // Import Swagger setup
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -15,6 +19,14 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('Welcome to Kommunali Backend API!');
 });
+
+// Use routes
+app.use('/api/users', userRoutes);
+app.use('/api/stores', storeRoutes);
+app.use('/api/products', productRoutes);
+
+// Set up Swagger UI
+setupSwagger(app);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || '', {
