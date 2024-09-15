@@ -1,29 +1,22 @@
 import admin from 'firebase-admin';
-import path from 'path';
 import dotenv from 'dotenv';
-import fs from 'fs';
+import serviceAccountKey from './firebase-adminsdk.json'; // Directly import the JSON file
 
 dotenv.config(); // Load environment variables
 
-// Get the path to the Firebase Admin SDK JSON file from the .env file
-const serviceAccountPath = path.resolve(process.env.FIREBASE_ADMIN_SDK_PATH || '');
-
-// Ensure the service account path is set correctly
-if (!serviceAccountPath) {
-  throw new Error('FIREBASE_ADMIN_SDK_PATH is not set in the .env file');
-}
-
-// Check if the file exists at the specified path
-if (!fs.existsSync(serviceAccountPath)) {
-  throw new Error(`Service account file not found at path: ${serviceAccountPath}`);
-}
-
-// Load the service account key file
-const serviceAccount = require(serviceAccountPath);
-
 // Initialize Firebase Admin SDK with the service account credentials
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert(serviceAccountKey as admin.ServiceAccount),
 });
 
-export default admin;
+// Extract necessary fields for the Firebase client SDK configuration
+const firebaseClientConfig = {
+  apiKey: process.env.FIREBASE_API_KEY, // These values should still be in .env for security
+  authDomain: `${serviceAccountKey.project_id}.firebaseapp.com`,
+  projectId: serviceAccountKey.project_id,
+  storageBucket: `${serviceAccountKey.project_id}.appspot.com`,
+  messagingSenderId: serviceAccountKey.client_id,
+  appId: process.env.FIREBASE_APP_ID, // Unique identifier for the Firebase application
+};
+
+export { admin, firebaseClientConfig };
