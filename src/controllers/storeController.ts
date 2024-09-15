@@ -3,10 +3,16 @@ import mongoose from 'mongoose'; // Import mongoose for ObjectId
 import { Store } from '../models/Store';
 import { User } from '../models/User';
 
+
 // Create a new store
 export const createStore = async (req: Request, res: Response) => {
     try {
         const { ownerId, name, description, location, address } = req.body;
+
+        // Validate ownerId as an ObjectId
+        if (!mongoose.Types.ObjectId.isValid(ownerId)) {
+            return res.status(400).json({ message: 'Invalid owner ID' });
+        }
 
         // Cast ownerId to ObjectId
         const ownerObjectId = new mongoose.Types.ObjectId(ownerId);
@@ -29,7 +35,7 @@ export const createStore = async (req: Request, res: Response) => {
         const savedStore = await newStore.save();
 
         // Add the store to the owner's list of stores
-        owner.stores.push(savedStore._id as mongoose.Types.ObjectId);
+        owner.stores.push(savedStore._id as string);
         await owner.save();
 
         res.status(201).json(savedStore);
