@@ -1,7 +1,6 @@
-// src/types/user.d.ts
 export interface IUser {
+    firebaseUserId: string;
     email: string;
-    password: string;
     firstName: string;
     lastName: string;
     stores: string[]; // Array of store IDs (as strings) representing the user's stores
