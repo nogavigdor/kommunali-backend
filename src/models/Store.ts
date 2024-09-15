@@ -1,25 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IStore } from '../types/store'; // Import the interface
 
-// Define the Store interface
-interface IStore extends Document {
-  owner: mongoose.Types.ObjectId; // Reference to the User model
-  name: string;
-  description: string;
-  location: {
-    type: string;
-    coordinates: [number, number]; // [longitude, latitude]
-  };
-  address: {
-    street: string;
-    houseNumber: string;
-    apartment?: string;
-    postalCode: string;
-    city: string;
-  };
-  products: mongoose.Types.ObjectId[]; // Array of product references
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Create a Mongoose schema using the interface
+interface IStoreModel extends IStore, Document {} // Extend the IProduct interface with Document
 
 // Define the Store schema
 const StoreSchema: Schema = new Schema(
@@ -47,4 +30,4 @@ const StoreSchema: Schema = new Schema(
 StoreSchema.index({ location: '2dsphere' });
 
 // Export the Store model
-export const Store = mongoose.model<IStore>('Store', StoreSchema);
+export const Store = mongoose.model<IStoreModel>('Store', StoreSchema);

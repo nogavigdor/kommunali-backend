@@ -1,21 +1,14 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { IUser } from '../types/user'; // Import the interface
 
-// Define the User interface
-interface IUser extends Document {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  stores: mongoose.Types.ObjectId[]; // Array of store references (owned by the user)
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Create a Mongoose schema using the interface
+interface IUserModel extends IUser, Document {} // Extend the IProduct interface with Document
 
 // Define the User schema
 const UserSchema: Schema = new Schema(
   {
+    firebaseUserId: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     stores: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Store' }], // References to owned stores
@@ -24,4 +17,4 @@ const UserSchema: Schema = new Schema(
 );
 
 // Export the User model
-export const User = mongoose.model<IUser>('User', UserSchema);
+export const User = mongoose.model<IUserModel>('User', UserSchema);
