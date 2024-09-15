@@ -1,6 +1,19 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
-import admin from '../config/firebase'; // Import Firebase Admin SDK
+import { admin, firebaseClientConfig } from '../config/firebase'; // Import Firebase Admin SDK
+import firebase from 'firebase/compat/app'; 
+import 'firebase/compat/auth';
+
+
+// Initialize Firebase Client SDK if it hasn't been initialized
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseClientConfig);
+  }
+
+// Extend the Request interface to include a 'user' property
+interface AuthenticatedRequest extends Request {
+    user?: { uid: string };
+  }
 
 // Register a user using Firebase Admin SDK and create a user profile in the database
 export const registerUser = async (req: Request, res: Response) => {
@@ -36,10 +49,45 @@ export const registerUser = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to create user profile', error });
     }
 };
-// Get user information by Firebase UID
-export const getUserProfile = async (req: Request, res: Response) => {
+
+export const loginUser = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
     try {
-        const { firebaseUserId } = req.body;
+        // This part assumes that you are managing user login on the client-side
+        // Here, we only retrieve the user profile using their email for demonstration
+        const userRecord = await admin.auth().getUserByEmail(email);
+        
+        // Get the Firebase user ID
+        const firebaseUserId = userRecord.uid;
+
+        // Generate a custom token for the user
+        const customToken = await admin.auth().createCustomToken(firebaseUserId);
+
+        // Retrieve user profile from your database using the Firebase UID
+        const user = await User.findOne({ firebaseUserId });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found in database.' });
+        }
+
+        // Return the custom token and user information
+        res.status(200).json({ token: customToken, user });
+    } catch (error) {
+        console.error('Error during login:', error);
+        res.status(401).json({ message: 'Invalid email or password.', error });
+    }
+};
+
+
+// Get user information by Firebase UID
+export const getUserProfile = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const firebaseUserId = req.user?.uid; ;
+
+        if (!firebaseUserId) {
+            return res.status(401).json({ message: 'Unauthorized: No user ID found' });
+        }
 
         const user = await User.findOne({ firebaseUserId }).populate('stores');
 
@@ -54,9 +102,9 @@ export const getUserProfile = async (req: Request, res: Response) => {
 };
 
 // Update user information
-export const updateUserProfile = async (req: Request, res: Response) => {
+export const updateUserProfile = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { firebaseUserId } = req.body;
+        const firebaseUserId = req.user?.uid; 
         const updatedData = req.body;
 
         const updatedUser = await User.findOneAndUpdate({ firebaseUserId }, updatedData, { new: true });
@@ -71,16 +119,18 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 };
 
 // Delete user profile
-export const deleteUserProfile = async (req: Request, res: Response) => {
+export const deleteUserProfile = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { firebaseUserId } = req.body;
+        const firebaseUserId = req.user?.uid;
 
         const deletedUser = await User.findOneAndDelete({ firebaseUserId });
         if (!deletedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Optionally, delete the Firebase user
+        if (!firebaseUserId) {
+            return res.status(400).json({ message: 'Invalid Firebase UID' });
+        }
         await admin.auth().deleteUser(firebaseUserId);
 
         res.status(200).json({ message: 'User profile deleted successfully' });
