@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  createUserProfile,
+  registerUser,
   getUserProfile,
   updateUserProfile,
   deleteUserProfile
@@ -12,7 +12,7 @@ const router = express.Router();
 
 
 // Create a user profile (Registration)
-router.post('/register', createUserProfile);
+router.post('/register', registerUser);
 
 // Get user profile
 router.get('/:userId', verifyToken, getUserProfile);
