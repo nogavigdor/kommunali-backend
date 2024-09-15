@@ -1,13 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
-import admin from '.././config/firebase'; // Import the initialized Firebase Admin instance
+import { admin } from '.././config/firebase'; // Import the initialized Firebase Admin instance
 
-export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split('Bearer ')[1]; // Extract the token from the Authorization header
+// Extend the Request interface to include a 'user' property
+interface AuthenticatedRequest extends Request {
+  user?: { uid: string };
+}
 
-  if (!token) {
+export const verifyToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authorizationHeader = req.headers.authorization; // Get the token from the Authorization header
+
+  if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }
 
+  const token = authorizationHeader.split(' ')[1]; 
   try {
     // Verify the token using Firebase Admin
     const decodedToken = await admin.auth().verifyIdToken(token);
