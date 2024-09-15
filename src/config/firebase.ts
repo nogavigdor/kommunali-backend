@@ -1,6 +1,7 @@
 import admin from 'firebase-admin';
 import path from 'path';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config(); // Load environment variables
 
@@ -10,6 +11,11 @@ const serviceAccountPath = path.resolve(process.env.FIREBASE_ADMIN_SDK_PATH || '
 // Ensure the service account path is set correctly
 if (!serviceAccountPath) {
   throw new Error('FIREBASE_ADMIN_SDK_PATH is not set in the .env file');
+}
+
+// Check if the file exists at the specified path
+if (!fs.existsSync(serviceAccountPath)) {
+  throw new Error(`Service account file not found at path: ${serviceAccountPath}`);
 }
 
 // Load the service account key file
