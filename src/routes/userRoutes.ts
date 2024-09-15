@@ -10,19 +10,17 @@ import { verifyToken } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
-//Apply the firebase auth middleware to all routes
-router.use(verifyToken);
 
 // Create a user profile (Registration)
 router.post('/register', createUserProfile);
 
 // Get user profile
-router.get('/:userId', getUserProfile);
+router.get('/:userId', verifyToken, getUserProfile);
 
 // Update user profile
-router.put('/:userId', updateUserProfile);
+router.put('/:userId', verifyToken,  updateUserProfile);
 
 // Delete user profile
-router.delete('/:userId', deleteUserProfile);
+router.delete('/:userId', verifyToken,  deleteUserProfile);
 
 export default router;
