@@ -2,20 +2,29 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import admin from '../config/firebase'; // Import Firebase Admin SDK
 
-// Middleware has already verified the token, and we have the Firebase UID
-export const createUserProfile = async (req: Request, res: Response) => {
+// Register a user using Firebase Admin SDK and create a user profile in the database
+export const registerUser = async (req: Request, res: Response) => {
     try {
-        const { firebaseUserId, email, firstName, lastName } = req.body;
+        const { email, password, firstName, lastName } = req.body;
 
-        // Check if user already exists
+        // Create a new user in Firebase Authentication
+        const userRecord = await admin.auth().createUser({
+            email: email,
+            password: password,
+        });
+
+        const firebaseUserId = userRecord.uid;
+
+        // Check if the user profile already exists in the database
         const existingUser = await User.findOne({ firebaseUserId });
         if (existingUser) {
             return res.status(400).json({ message: 'User profile already exists' });
         }
 
+        // Create a new user profile in the database using Firebase UID
         const newUser = new User({
             firebaseUserId,
-            email,
+            email: userRecord.email, // Use the email from the Firebase user record
             firstName,
             lastName,
             stores: [],
@@ -27,7 +36,6 @@ export const createUserProfile = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Failed to create user profile', error });
     }
 };
-
 // Get user information by Firebase UID
 export const getUserProfile = async (req: Request, res: Response) => {
     try {
