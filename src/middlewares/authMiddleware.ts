@@ -17,9 +17,11 @@ export const verifyToken = async (req: AuthenticatedRequest, res: Response, next
   try {
     // Verify the token using Firebase Admin
     const decodedToken = await admin.auth().verifyIdToken(token);
+    console.log('decodedToken', decodedToken);
     (req as any).user = decodedToken; // Attach the decoded token to the request object
     next();
   } catch (error) {
+    console.error(error);
     return res.status(401).json({ message: 'Unauthorized: Invalid token' });
   }
 };

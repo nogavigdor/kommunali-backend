@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
-import { admin, firebaseClientConfig } from '../config/firebase'; // Import Firebase Admin SDK
+import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword } from '../config/firebase'; // Import Firebase Admin SDK
 import firebase from 'firebase/compat/app'; 
-import 'firebase/compat/auth';
+import { FirebaseAuthError } from 'firebase-admin/auth';
 
 
 // Initialize Firebase Client SDK if it hasn't been initialized
@@ -46,35 +46,24 @@ export const registerUser = async (req: Request, res: Response) => {
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
     } catch (error) {
+        if (error instanceof FirebaseAuthError && error.code === 'auth/email-already-exists') {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+            
         res.status(500).json({ message: 'Failed to create user profile', error });
     }
 };
 
 export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
-
+    
+    const auth = getAuth();
     try {
-        // This part assumes that you are managing user login on the client-side
-        // Here, we only retrieve the user profile using their email for demonstration
-        const userRecord = await admin.auth().getUserByEmail(email);
-        
-        // Get the Firebase user ID
-        const firebaseUserId = userRecord.uid;
-
-        // Generate a custom token for the user
-        const customToken = await admin.auth().createCustomToken(firebaseUserId);
-
-        // Retrieve user profile from your database using the Firebase UID
-        const user = await User.findOne({ firebaseUserId });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found in database.' });
-        }
-
-        // Return the custom token and user information
-        res.status(200).json({ token: customToken, user });
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log(userCredential);
+        const user = userCredential.user;
+        res.status(200).json(user);
     } catch (error) {
-        console.error('Error during login:', error);
         res.status(401).json({ message: 'Invalid email or password.', error });
     }
 };
