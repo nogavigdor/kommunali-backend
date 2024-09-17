@@ -1,8 +1,25 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { IStore } from '../types/store'; // Import the interface
 
+
+// Define the Product schema directly within the Store schema
+const ProductSchema: Schema = new Schema(
+  {
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    price: { type: Number, required: true },
+    imageUrl: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['available', 'reserved', 'sold', 'hidden'],
+      default: 'available',
+    },
+  },
+  { timestamps: true }
+);
+
 // Create a Mongoose schema using the interface
-interface IStoreModel extends IStore, Document {} // Extend the IProduct interface with Document
+interface IStoreModel extends IStore, Document {} // Extend the IStore interface with Document
 
 // Define the Store schema
 const StoreSchema: Schema = new Schema(
@@ -21,7 +38,7 @@ const StoreSchema: Schema = new Schema(
       postalCode: { type: String, required: true },
       city: { type: String, required: true },
     },
-    products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    products: { type: [ProductSchema], default: [] },
   },
   { timestamps: true }
 );

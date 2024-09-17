@@ -23,7 +23,7 @@ router.get('/:productId', getProductById);
 router.put('/:productId', updateProductDetails);
 
 // Update product status (PATCH for partial update)
-router.patch('/:productId/status', updateProductStatus);
+router.patch('/:productId', updateProductStatus);
 
 // Delete a product
 router.delete('/:productId', deleteProduct);

@@ -3,7 +3,6 @@ import mongoose from 'mongoose'; // Import mongoose for ObjectId
 import { Store } from '../models/Store';
 import { User } from '../models/User';
 
-
 // Create a new store
 export const createStore = async (req: Request, res: Response) => {
     try {
@@ -35,7 +34,7 @@ export const createStore = async (req: Request, res: Response) => {
         const savedStore = await newStore.save();
 
         // Add the store to the owner's list of stores
-        owner.stores.push(savedStore._id as string);
+        owner.stores.push(savedStore._id);
         await owner.save();
 
         res.status(201).json(savedStore);
@@ -47,8 +46,8 @@ export const createStore = async (req: Request, res: Response) => {
 // Get all stores
 export const getAllStores = async (req: Request, res: Response) => {
     try {
-        // Placeholder logic
-        res.status(200).json({ message: 'This will return all stores.' });
+        const stores = await Store.find().populate('owner'); // Populates the owner field with user data
+        res.status(200).json(stores);
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch stores', error });
     }
@@ -57,8 +56,19 @@ export const getAllStores = async (req: Request, res: Response) => {
 // Get a store by ID
 export const getStoreById = async (req: Request, res: Response) => {
     try {
-        // Placeholder logic
-        res.status(200).json({ message: 'This will return a specific store.' });
+        const { storeId } = req.params;
+
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ message: 'Invalid store ID' });
+        }
+
+        const store = await Store.findById(storeId).populate('owner');
+        if (!store) {
+            return res.status(404).json({ message: 'Store not found' });
+        }
+
+        res.status(200).json(store);
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch store', error });
     }
@@ -67,8 +77,20 @@ export const getStoreById = async (req: Request, res: Response) => {
 // Update store details
 export const updateStore = async (req: Request, res: Response) => {
     try {
-        // Placeholder logic
-        res.status(200).json({ message: 'This will update the store details.' });
+        const { storeId } = req.params;
+        const updatedData = req.body;
+
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ message: 'Invalid store ID' });
+        }
+
+        const updatedStore = await Store.findByIdAndUpdate(storeId, updatedData, { new: true, runValidators: true });
+        if (!updatedStore) {
+            return res.status(404).json({ message: 'Store not found' });
+        }
+
+        res.status(200).json(updatedStore);
     } catch (error) {
         res.status(500).json({ message: 'Failed to update store', error });
     }
@@ -77,10 +99,23 @@ export const updateStore = async (req: Request, res: Response) => {
 // Delete a store
 export const deleteStore = async (req: Request, res: Response) => {
     try {
-        // Placeholder logic
-        res.status(200).json({ message: 'This will delete the store.' });
+        const { storeId } = req.params;
+
+        // Validate storeId
+        if (!mongoose.Types.ObjectId.isValid(storeId)) {
+            return res.status(400).json({ message: 'Invalid store ID' });
+        }
+
+        const deletedStore = await Store.findByIdAndDelete(storeId);
+        if (!deletedStore) {
+            return res.status(404).json({ message: 'Store not found' });
+        }
+
+        // Optionally, you could also remove this store from the owner's list of stores
+        await User.findByIdAndUpdate(deletedStore.owner, { $pull: { stores: storeId } });
+
+        res.status(200).json({ message: 'Store deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete store', error });
     }
 };
-

@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 // Use routes
 app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/stores/:storeId/products', productRoutes);
 
 // Set up Swagger UI
 setupSwagger(app);

@@ -1,4 +1,8 @@
+import { IProduct } from './product';
+import { Types } from 'mongoose';
+
 export interface IStore {
+    _id?: Types.ObjectId; 
     owner: string; // User ID as a string
     name: string;
     description: string;
@@ -13,7 +17,7 @@ export interface IStore {
       postalCode: string;
       city: string;
     };
-    products: string[]; // Array of product IDs (as strings)
+    products: IProduct[]; // Array of products (IProduct interface)
     createdAt: Date;
     updatedAt: Date;
   }

@@ -1,10 +1,11 @@
+import { Types } from 'mongoose';
 export interface IUser {
+    _id?: Types.ObjectId; 
     firebaseUserId: string;
     email: string;
     firstName: string;
     lastName: string;
-    stores: string[]; // Array of store IDs (as strings) representing the user's stores
-    createdAt: Date;
+    stores: Types.ObjectId[]; // Array of store IDs
     updatedAt: Date;
   }
   
