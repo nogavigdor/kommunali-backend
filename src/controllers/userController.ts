@@ -12,7 +12,14 @@ if (!firebase.apps.length) {
 
 // Extend the Request interface to include a 'user' property
 interface AuthenticatedRequest extends Request {
-    user?: { uid: string };
+    user?: { uid: string,
+    email: string,
+    emailVerified: boolean,
+    displayName: string | null,
+    photoURL: string | null,
+    phoneNumber: string | null,
+
+     };
   }
 
 // Register a user using Firebase Admin SDK and create a user profile in the database
