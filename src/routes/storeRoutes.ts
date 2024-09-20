@@ -7,21 +7,23 @@ import {
   deleteStore
 } from '../controllers/storeController';
 
+import { verifyToken } from '../middlewares/authMiddleware';  
+
 const router = express.Router();
 
 // Create a new store
-router.post('/', createStore);
+router.post('/', verifyToken, createStore);
 
 // Get all stores
 router.get('/', getAllStores);
 
 // Get a specific store by ID
-router.get('/:storeId', getStoreById);
+router.get('/:storeId', verifyToken, getStoreById);
 
 // Update store details
-router.put('/:storeId', updateStore);
+router.put('/:storeId', verifyToken, updateStore);
 
 // Delete a store
-router.delete('/:storeId', deleteStore);
+router.delete('/:storeId', verifyToken, deleteStore);
 
 export default router;
