@@ -2,7 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { IUser } from '../types/user'; // Import the interface
 
 // Create a Mongoose schema using the interface
-interface IUserModel extends IUser, Document {} // Extend the IProduct interface with Document
+interface IUserModel extends IUser, Document {
+  _id: mongoose.Types.ObjectId;
+} // Extend the IProduct interface with Document
 
 // Define the User schema
 const UserSchema: Schema = new Schema(
