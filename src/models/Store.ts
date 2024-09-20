@@ -19,7 +19,9 @@ const ProductSchema: Schema = new Schema(
 );
 
 // Create a Mongoose schema using the interface
-interface IStoreModel extends IStore, Document {} // Extend the IStore interface with Document
+interface IStoreModel extends IStore, Document {
+  _id: mongoose.Types.ObjectId;
+} // Extend the IStore interface with Document
 
 // Define the Store schema
 const StoreSchema: Schema = new Schema(
