@@ -265,7 +265,7 @@ paths:
           description: Store not found
         '500':
           description: Failed to delete store
-    /products:
+  /stores/{storeId}/products:
     post:
       summary: Add a new product
       tags:
@@ -332,7 +332,7 @@ paths:
         '500':
           description: Failed to fetch products
 
-  /products/{productId}:
+  /stores/{storeId}/products/{productId}:
     get:
       summary: Get a product by ID
       tags:
