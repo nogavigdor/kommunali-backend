@@ -169,14 +169,14 @@ export const deleteProduct = async (req: Request, res: Response) => {
     const productsArray = store.products as Types.DocumentArray<IProduct>;
 
       // Remove the product from the store's products array
-      const product = productsArray .id(productId);
+      const product = productsArray.id(productId);
       if (!product) {
         return res.status(404).json({ message: 'Product not found in store.' });
       }
 
      
 
-      product.remove(); // Remove the product
+      await product.deleteOne(); // Remove the product
       await store.save();
 
       res.status(200).json({ message: 'Product deleted successfully' });
