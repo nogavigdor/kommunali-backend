@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose'; // Import mongoose for ObjectId
 import { Store } from '../models/Store';
 import { User } from '../models/User';
+import { AuthenticatedRequest } from '../types/authenticatedRequest';
 
 // Create a new store
-export const createStore = async (req: Request, res: Response) => {
+export const createStore = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { ownerId, name, description, location, address } = req.body;
 
