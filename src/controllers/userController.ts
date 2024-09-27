@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
-import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword } from '../config/firebase'; // Import Firebase Admin SDK
+import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from '../config/firebase'; // Import Firebase Admin SDK
 import firebase from 'firebase/compat/app'; 
 import { FirebaseAuthError } from 'firebase-admin/auth';
+import { AuthenticatedRequest } from '../types/authenticatedRequest';
 
 
 // Initialize Firebase Client SDK if it hasn't been initialized
@@ -10,17 +11,6 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseClientConfig);
   }
 
-// Extend the Request interface to include a 'user' property
-interface AuthenticatedRequest extends Request {
-    user?: { uid: string,
-    email: string,
-    emailVerified: boolean,
-    displayName: string | null,
-    photoURL: string | null,
-    phoneNumber: string | null,
-
-     };
-  }
 
 // Register a user using Firebase Admin SDK and create a user profile in the database
 export const registerUser = async (req: Request, res: Response) => {
@@ -36,14 +26,14 @@ export const registerUser = async (req: Request, res: Response) => {
         const firebaseUserId = userRecord.uid;
 
         // Check if the user profile already exists in the database
-        const existingUser = await User.findOne({ firebaseUserId });
+        const existingUser = await User.findById(firebaseUserId);
         if (existingUser) {
-            return res.status(400).json({ message: 'User profile already exists' });
+            return res.status(400).json({ message: 'User profile already exists in mongodb' });
         }
 
         // Create a new user profile in the database using Firebase UID
         const newUser = new User({
-            firebaseUserId,
+            _id: firebaseUserId,
             email: userRecord.email, // Use the email from the Firebase user record
             firstName,
             lastName,
@@ -54,7 +44,7 @@ export const registerUser = async (req: Request, res: Response) => {
         res.status(201).json(savedUser);
     } catch (error) {
         if (error instanceof FirebaseAuthError && error.code === 'auth/email-already-exists') {
-            return res.status(400).json({ message: 'Email already exists' });
+            return res.status(400).json({ message: 'Email already exists in firbase' });
         }
             
         res.status(500).json({ message: 'Failed to create user profile', error });
@@ -140,7 +130,9 @@ export const forgotPassword = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
 
-        await admin.auth().generatePasswordResetLink(email); // TODO: Add url for the actionCodeSettings (redirect after change)
+        const auth = getAuth();
+
+        await sendPasswordResetEmail(auth, email); // TODO: Add url for the actionCodeSettings (redirect after change)
 
         res.status(200).json({ message: 'Password reset link sent successfully' });
     } catch (error) {
