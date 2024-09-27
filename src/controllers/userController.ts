@@ -134,3 +134,16 @@ export const deleteUserProfile = async (req: AuthenticatedRequest, res: Response
         res.status(500).json({ message: 'Failed to delete user profile', error });
     }
 };
+
+// Forgot Password
+export const forgotPassword = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+
+        await admin.auth().generatePasswordResetLink(email); // TODO: Add url for the actionCodeSettings (redirect after change)
+
+        res.status(200).json({ message: 'Password reset link sent successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to send password reset link', error });
+    }
+}

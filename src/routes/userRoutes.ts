@@ -4,7 +4,8 @@ import {
   loginUser,
   getUserProfile,
   updateUserProfile,
-  deleteUserProfile
+  deleteUserProfile,
+  forgotPassword,
 } from '../controllers/userController';
 
 import { verifyToken } from '../middlewares/authMiddleware';
@@ -27,4 +28,8 @@ router.put('/:userId', verifyToken,  updateUserProfile);
 // Delete user profile
 router.delete('/:userId', verifyToken,  deleteUserProfile);
 
+// Forgot Password
+router.post('/forgot-password', forgotPassword);
+
 export default router;
+ 

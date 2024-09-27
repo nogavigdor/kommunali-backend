@@ -122,7 +122,27 @@ paths:
           description: User not found
         '500':
           description: Failed to delete user profile
-
+  /users/forgot-password:
+    post:
+      summary: Send password reset email
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Password reset email sent successfully
+        '404':
+          description: User not found
+        '500':
+          description: Failed to send password reset email
   /stores:
     post:
       summary: Create a new store
