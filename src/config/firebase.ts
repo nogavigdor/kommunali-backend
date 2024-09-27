@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import * as firebase from 'firebase/app';
 import dotenv from 'dotenv';
 import serviceAccountKey from './firebase-adminsdk.json'; // Directly import the JSON file
@@ -23,4 +23,4 @@ const firebaseClientConfig = {
 
 firebase.initializeApp(firebaseClientConfig); // Initialize Firebase Client SDK
 
-export { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword };
+export { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendPasswordResetEmail };
