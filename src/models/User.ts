@@ -10,6 +10,7 @@ interface IUserModel extends IUser, Document {
 const UserSchema: Schema = new Schema(
   {
     firebaseUserId: { type: String, required: true },
+    role: { type: String, default: 'user' },
     email: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
