@@ -7,24 +7,20 @@ import { AuthenticatedRequest } from '../types/authenticatedRequest';
 // Create a new store
 export const createStore = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { ownerId, name, description, location, address } = req.body;
+        const { name, description, location, address } = req.body;
 
-        // Validate ownerId as an ObjectId
-        if (!mongoose.Types.ObjectId.isValid(ownerId)) {
-            return res.status(400).json({ message: 'Invalid owner ID' });
+        const firebaseUserId = req.user?.uid;
+
+        const user = await User.findOne({ firebaseUserId });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        // Cast ownerId to ObjectId
-        const ownerObjectId = new mongoose.Types.ObjectId(ownerId);
-
-        // Check if the owner exists
-        const owner = await User.findById(ownerObjectId);
-        if (!owner) {
-            return res.status(404).json({ message: 'Owner not found' });
-        }
+        const owner = user._id;
 
         const newStore = new Store({
-            owner: ownerObjectId,
+            owner,
             name,
             description,
             location,
@@ -35,8 +31,8 @@ export const createStore = async (req: AuthenticatedRequest, res: Response) => {
         const savedStore = await newStore.save();
 
         // Add the store to the owner's list of stores
-        owner.stores.push(savedStore._id);
-        await owner.save();
+        user.stores.push(savedStore._id);
+        await user.save();
 
         res.status(201).json(savedStore);
     } catch (error) {
