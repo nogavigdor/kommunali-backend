@@ -26,14 +26,14 @@ export const registerUser = async (req: Request, res: Response) => {
         const firebaseUserId = userRecord.uid;
 
         // Check if the user profile already exists in the database
-        const existingUser = await User.findById(firebaseUserId);
+        const existingUser = await User.findOne({firebaseUserId});
         if (existingUser) {
             return res.status(400).json({ message: 'User profile already exists in mongodb' });
         }
 
         // Create a new user profile in the database using Firebase UID
         const newUser = new User({
-            _id: firebaseUserId,
+            firebaseUserId: firebaseUserId,
             email: userRecord.email, // Use the email from the Firebase user record
             firstName,
             lastName,
