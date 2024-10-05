@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { IProduct } from '../types/product'; // Importing the interface
 import { Store } from '../models/Store';
 import { Types } from 'mongoose';
+import { AuthenticatedRequest } from '../types/authenticatedRequest';
+import { User } from '../models/User';
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
@@ -20,7 +22,7 @@ export const addProduct = async (req: Request, res: Response) => {
     }
 
      // Create a new product subdocument using the Mongoose schema
-     const newProduct: IProduct = { name, description, price, imageUrl, status: 'available' };
+     const newProduct: IProduct = { name, description, price, imageUrl, status: 'available', reservedFor: null, reservedExpiration: null };
 
     // Push the new product into the store's products array
     store.products.push(newProduct);
@@ -32,6 +34,90 @@ export const addProduct = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to add product', error });
   }
 };
+
+//Add A product request with the ability to reserve and cancel reservation
+export const addProductRequest = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { storeId, productId } = req.params;
+    //retrieving the user details which was added to the request object by the verifyToken middleware
+    const user = req.user;
+    const { action } = req.body;
+
+    // Find the store by ID
+    const store = await Store.findById(storeId);
+    if (!store) {
+      return res.status(404).json({ message: 'Store not found.' });
+    }
+
+    if (!productId) {
+      return res.status(400).json({ message: 'Product ID is required.' });
+    }
+
+    if ( action === 'reserve') {
+      // Find the product in the store's products array
+      const product = store.products.find(product => product._id?.toString() === productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found in store.' });
+      }
+
+      // Check if the product is available
+      if (product.status !== 'available') {
+        return res.status(400).json({ message: 'Product is not available.' });
+      }
+
+      // Reserve the product for the user
+      product.status = 'reserved';
+      product.reservedFor = user?._id;
+      product.reservedExpiration = new Date(Date.now() + 10000 * 60 * 1000); // 10000 minutes from now
+      await store.save();
+
+       // Add the product to the user's requested_products array
+       await User.findByIdAndUpdate(
+        user?._id,
+        { $addToSet: { requested_products: { product: productId, store: storeId } } },
+        { new: true }
+      );
+
+      return res.status(200).json({ message: 'Product reserved successfully', product });
+
+    } else if (action === 'cancel') {
+      // Find the product in the store's products array
+      const product = store.products.find(product => product._id?.toString() === productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found in store.' });
+      }
+
+        // Check if the product is reserved by the user
+      if (product.status !== 'reserved' || product.reservedFor?.toString() !== user?._id?.toString()) {
+        return res.status(400).json({ message: 'Product is not reserved by you.' });
+      }
+
+      // Cancel the reservation
+      product.status = 'available';
+      product.reservedFor = null;
+      product.reservedExpiration = null;
+      await store.save();
+
+      // Remove the product from the user's requested_products array
+      await User.findByIdAndUpdate(
+        user?._id,
+        { $pull: { requested_products: { product: productId } } },
+        { new: true }
+      );
+
+      return res.status(200).json({ message: 'Product reservation canceled', product });
+      
+   
+    } else {
+      return res.status(400).json({ message: 'Invalid action.' });
+    }
+
+
+    
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to add product', error });
+  }
+}
 
 
 // Update product status (available, reserved, sold, hidden)
