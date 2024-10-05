@@ -2,6 +2,7 @@ import express from 'express';
 import {
   createStore,
   getAllStores,
+  getStoresInBounds,
   getStoreById,
   updateStore,
   deleteStore
@@ -16,6 +17,13 @@ router.post('/', verifyToken, createStore);
 
 // Get all stores - by admin
 router.get('/', verifyToken, verifyAdmin, getAllStores);
+
+// Get all stores - by user
+router.get('/', verifyToken, getAllStores);
+
+// Get all stores in bounds
+router.post('/stores-in-bounds', getStoresInBounds);
+
 
 // Get a specific store by ID
 router.get('/:storeId', verifyToken, getStoreById);
