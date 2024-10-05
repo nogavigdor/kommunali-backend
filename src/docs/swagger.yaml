@@ -13,6 +13,95 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        firebaseUserId:
+          type: string
+        role:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        requested_products:
+          type: array
+          items:
+            type: object
+            properties:
+              product:
+                type: string
+                description: Reference to the product
+              store:
+                type: string
+                description: Reference to the store where the product is located
+
+    Store:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              example: "Point"
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              example: [9.4728, 55.4907]
+        address:
+          type: object
+          properties:
+            street:
+              type: string
+            houseNumber:
+              type: string
+            apartment:
+              type: string
+            postalCode:
+              type: string
+            city:
+              type: string
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+          enum: [available, reserved, hidden, sold]
+        reservedFor:
+          type: string
+          nullable: true
+        reservedExpiration:
+          type: string
+          format: date-time
+          nullable: true
 paths:
   /users/register:
     post:
@@ -204,7 +293,35 @@ paths:
           description: List of stores retrieved successfully
         '500':
           description: Failed to fetch stores
-
+  /stores/stores-in-bounds:
+    post:
+      summary: Get all stores within bounds
+      tags:
+        - Stores
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topRight:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 2
+                  maxItems: 2
+                bottomLeft:
+                  type: array
+                  items:
+                    type: number
+                  minItems: 2
+                  maxItems: 2
+      responses:
+        '200':
+          description: List of stores retrieved successfully
+        '500':
+          description: Failed to fetch stores
   /stores/{storeId}:
     get:
       summary: Get a store by ID
@@ -293,6 +410,77 @@ paths:
           description: Store not found
         '500':
           description: Failed to delete store
+  /stores/{storeId}/products/{productId}/request:
+    put:
+      summary: Handle product requests (reserve/cancel)
+      description: Updates the product reservation status. The action parameter in the request body will dictate whether the product is reserved or the reservation is canceled. If the action is `reserve`, the product is reserved for the user, and if the action is `cancel`, the reservation is canceled.
+      tags:
+        - Products
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: storeId
+          schema:
+            type: string
+          required: true
+          description: The ID of the store to update the product in
+        - in: path
+          name: productId
+          schema:
+            type: string
+          required: true
+          description: The ID of the product to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [reserve, cancel]
+                  description: Action to either reserve or cancel the reservation of the product
+              required:
+                - action
+      responses:
+        '200':
+          description: Product request processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  product:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      name:
+                        type: string
+                      description:
+                        type: string
+                      price:
+                        type: number
+                      status:
+                        type: string
+                        enum: [available, reserved, hidden, sold]
+                      reservedFor:
+                        type: string
+                        nullable: true
+                      reservedExpiration:
+                        type: string
+                        format: date-time
+                        nullable: true
+        '400':
+          description: Invalid request or action
+        '404':
+          description: Store or product not found
+        '500':
+          description: Failed to process product request
   /stores/{storeId}/products:
     post:
       summary: Add a new product
@@ -300,6 +488,13 @@ paths:
         - Products
       security:
         - bearerAuth: []
+      parameters:
+        - in: path
+          name: storeId
+          schema:
+            type: string
+          required: true
+          description: The ID of the store to update
       requestBody:
         required: true
         content:
@@ -315,14 +510,6 @@ paths:
                   type: string
                 price:
                   type: number
-                status:
-                  type: string
-                  enum: [available, reserved, hidden, sold]
-                reservedFor:
-                  type: string
-                reservedExpiration:
-                  type: string
-                  format: date-time
       responses:
         '201':
           description: Product created successfully
@@ -336,6 +523,12 @@ paths:
       tags:
         - Products
       parameters:
+        - in: path
+          name: storeId
+          schema:
+            type: string
+          required: true
+          description: The ID of the store to update
         - in: query
           name: status
           schema:
@@ -367,6 +560,12 @@ paths:
         - Products
       parameters:
         - in: path
+          name: storeId
+          schema:
+            type: string
+          required: true
+          description: The ID of the store to update
+        - in: path
           name: productId
           schema:
             type: string
@@ -387,6 +586,12 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - in: path
+          name: storeId
+          schema:
+            type: string
+          required: true
+          description: The ID of the store to update
         - in: path
           name: productId
           schema:
@@ -432,6 +637,12 @@ paths:
         - bearerAuth: []
       parameters:
         - in: path
+          name: storeId
+          schema:
+            type: string
+          required: true
+          description: The ID of the store to update
+        - in: path
           name: productId
           schema:
             type: string
@@ -444,3 +655,4 @@ paths:
           description: Product not found
         '500':
           description: Failed to delete product
+  
