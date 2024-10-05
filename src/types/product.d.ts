@@ -6,4 +6,8 @@ export interface IProduct {
     price: number;
     imageUrl: string;
     status: 'available' | 'reserved' | 'sold' | 'hidden';
+
+    reservedFor: Types.ObjectId |  null;
+    reservedExpiration: Date | null;
+    soldTo?: Types.ObjectId;
   }
