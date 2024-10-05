@@ -3,6 +3,7 @@ import mongoose from 'mongoose'; // Import mongoose for ObjectId
 import { Store } from '../models/Store';
 import { User } from '../models/User';
 import { AuthenticatedRequest } from '../types/authenticatedRequest';
+import { ILocationQuery } from '../types/locationQuery';
 
 // Create a new store
 export const createStore = async (req: AuthenticatedRequest, res: Response) => {
@@ -44,6 +45,26 @@ export const createStore = async (req: AuthenticatedRequest, res: Response) => {
 export const getAllStores = async (req: Request, res: Response) => {
     try {
         const stores = await Store.find().populate('owner'); // Populates the owner field with user data
+        res.status(200).json(stores);
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch stores', error });
+    }
+};
+
+// Get all stores within the specified bounds (2 coordinates which define a rectangle)
+export const getStoresInBounds = async (req: Request, res: Response) => {
+    try {
+        const { bottomLeft, topRight } = req.body as ILocationQuery;
+
+        const stores = await Store.find({
+            location: {
+                $geoWithin: {
+                    $box: [bottomLeft, topRight],
+                },
+            },
+        });
+        
+
         res.status(200).json(stores);
     } catch (error) {
         res.status(500).json({ message: 'Failed to fetch stores', error });
