@@ -29,7 +29,7 @@ app.use('/api/stores/:storeId/products', productRoutes);
 
 // Enable CORS
 app.use(cors({
-  origin: "*", // Allow requests from any origin
+  origin: ["http://localhost:4000", "https://mevntello-backend.onrender.com"],// Allow requests from the localhost and production host
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization", // Allowed headers
   credentials: true, // Allow sending cookies with requests
