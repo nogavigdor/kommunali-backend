@@ -31,7 +31,8 @@ app.use('/api/stores/:storeId/products', productRoutes);
 app.use(cors({
   origin: "*", // Allow requests from any origin
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
-  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,auth-token" // Allowed headers
+  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization", // Allowed headers
+  credentials: true, // Allow sending cookies with requests
 }));
 // Set up Swagger UI
 setupSwagger(app);
