@@ -37,17 +37,25 @@ export const registerUser = async (req: Request, res: Response) => {
             email: userRecord.email, // Use the email from the Firebase user record
             firstName,
             lastName,
-            stores: [],
+            stores: [], // Initialize stores as an empty array
+            requested_products: [], // Initialize requested_products as an empty array
         });
 
         const savedUser = await newUser.save();
         res.status(201).json(savedUser);
-    } catch (error) {
-        if (error instanceof FirebaseAuthError && error.code === 'auth/email-already-exists') {
-            return res.status(400).json({ message: 'Email already exists in firbase' });
+    } catch (error:any) {
+        console.error('Error during user registration:', error);
+
+        // More specific Firebase error handling
+        if (error.code === 'auth/email-already-exists') {
+            return res.status(400).json({ message: 'Email already exists in Firebase' });
+        } else if (error.code === 'auth/invalid-password') {
+            return res.status(400).json({ message: 'Invalid password. Please meet the requirements.' });
+        } else if (error.code === 'auth/invalid-email') {
+            return res.status(400).json({ message: 'Invalid email format.' });
+        } else {
+            return res.status(500).json({ message: 'Failed to create user profile', error: error.message });
         }
-            
-        res.status(500).json({ message: 'Failed to create user profile', error });
     }
 };
 
