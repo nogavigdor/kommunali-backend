@@ -5,6 +5,8 @@ import userRoutes from './routes/userRoutes';
 import storeRoutes from './routes/storeRoutes';
 import productRoutes from './routes/productRoutes';
 import setupSwagger from './swagger'; // Import Swagger setup
+import cors from 'cors';
+
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +27,12 @@ app.use('/api/users', userRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/stores/:storeId/products', productRoutes);
 
+// Enable CORS
+app.use(cors({
+  origin: "*", // Allow requests from any origin
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
+  allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,auth-token" // Allowed headers
+}));
 // Set up Swagger UI
 setupSwagger(app);
 
