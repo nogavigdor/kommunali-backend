@@ -15,6 +15,12 @@ const UserSchema: Schema = new Schema(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     stores: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Store' }], // References to owned stores
+    requested_products: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId }, // Reference to the product's _id (embedded in Store)
+        store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' }, // Reference to the Store
+      },
+    ],
   },
   { timestamps: true } // Automatically manages createdAt and updatedAt fields
 );
