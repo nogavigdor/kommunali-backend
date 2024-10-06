@@ -286,6 +286,7 @@ paths:
 
     get:
       summary: Get all stores
+      description: Only Admins can view all stores, while Store Owners can only view their own stores
       tags:
         - Stores
       security:
