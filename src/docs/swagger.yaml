@@ -13,6 +13,7 @@ components:
     firebaseAuth:
       type: http
       scheme: bearer
+      bearerFormat: JWT  # Firebase issues JWT tokens
       description: "Firebase Authentication to obtain the token"
 
   schemas:
