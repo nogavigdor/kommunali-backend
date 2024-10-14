@@ -35,6 +35,7 @@ const firebaseClientConfig = {
   appId: process.env.FIREBASE_APP_ID, // Unique identifier for the Firebase application
 };
 
+//Initialize Firebase Client SDK
 firebase.initializeApp(firebaseClientConfig); // Initialize Firebase Client SDK
 
 export { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendPasswordResetEmail };
