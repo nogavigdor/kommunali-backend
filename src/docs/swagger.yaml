@@ -10,7 +10,7 @@ servers:
     description: Production server
 components:
   securitySchemes:
-    firebaseAuth:
+    bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT  # Firebase issues JWT tokens
