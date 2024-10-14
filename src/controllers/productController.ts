@@ -17,7 +17,7 @@ export const addProduct = async (req: Request, res: Response) => {
     }
 
     // Validate product details
-    if (!name || !price) {
+    if (!name || price === undefined || price === null) {
       return res.status(400).json({ message: 'Product name and price are required.' });
     }
 
