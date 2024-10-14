@@ -4,16 +4,16 @@ info:
   version: '1.0.0'
   description: API documentation for the Kommunali backend
 servers:
-  - url: http://localhost:4000/api
+  - url: http://localhost:4000/api-docs
     description: Local development server
-  - url: https://kommunali-backend.onrender.com/api
+  - url: https://kommunali-backend.onrender.com/api-docs
     description: Production server
 components:
   securitySchemes:
-    bearerAuth:
+    firebaseAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      description: "Firebase Authentication to obtain the token"
 
   schemas:
     User:
