@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { admin } from '.././config/firebase'; // Import the initialized Firebase Admin instance
-import { AuthenticatedRequest } from '../types/authenticatedRequest';
+import { AuthenticatedMongoRequest, AuthenticatedRequest } from '../types/authenticatedRequest';
 import { User } from '../models/User';
 import { UserRole } from '../types/user';
 
@@ -35,5 +35,18 @@ export const verifyAdmin = async (req: AuthenticatedRequest, res: Response, next
   if (user?.role !== UserRole.ADMIN) {
     return res.status(403).json({ message: 'Forbidden: admin role required' });
   }
+  next();
+};
+
+export const addMongoUserToRequest = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(403).json({ message: 'Forbidden: login required' });
+  }
+  const firebaseUserId = req.user.uid;
+  const user = await User.findOne({ firebaseUserId });
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  (req as AuthenticatedMongoRequest).mongoUser = user;
   next();
 };
