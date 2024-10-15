@@ -8,8 +8,9 @@ import {
   updateProductStatus,
   deleteProduct
 } from '../controllers/productController';
-import { verifyToken } from '../middlewares/authMiddleware';
+import { verifyToken, addMongoUserToRequest } from '../middlewares/authMiddleware';
 import { verifyStoreOwner } from '../middlewares/storeMiddleware';
+
 
 const router = express.Router({ mergeParams: true });
 
@@ -17,7 +18,7 @@ const router = express.Router({ mergeParams: true });
 router.post('/', verifyToken, verifyStoreOwner, addProduct);
 
 // Add a request for a specific product
-router.put('/:productId/request', verifyToken, addProductRequest);
+router.put('/:productId/request', verifyToken, addMongoUserToRequest, addProductRequest);
 
 // Get all products (with optional filtering)
 router.get('/', getAllProducts);
