@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { IProduct } from '../types/product'; // Importing the interface
 import { Store } from '../models/Store';
 import { Types } from 'mongoose';
-import { AuthenticatedRequest } from '../types/authenticatedRequest';
+import { AuthenticatedRequest, AuthenticatedMongoRequest } from '../types/authenticatedRequest';
 import { User } from '../models/User';
 
 export const addProduct = async (req: Request, res: Response) => {
@@ -36,11 +36,11 @@ export const addProduct = async (req: Request, res: Response) => {
 };
 
 //Add A product request with the ability to reserve and cancel reservation
-export const addProductRequest = async (req: AuthenticatedRequest, res: Response) => {
+export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Response) => {
   try {
     const { storeId, productId } = req.params;
     //retrieving the user details which was added to the request object by the verifyToken middleware
-    const user = req.user;
+    const user = req.mongoUser;
     const { action } = req.body;
 
     // Find the store by ID
@@ -65,18 +65,25 @@ export const addProductRequest = async (req: AuthenticatedRequest, res: Response
         return res.status(400).json({ message: 'Product is not available.' });
       }
 
+      console.log('the user id is', user?._id);
+
       // Reserve the product for the user
       product.status = 'reserved';
-      product.reservedFor = user?._id;
+      product.reservedFor = user?._id ?? null;
       product.reservedExpiration = new Date(Date.now() + 10000 * 60 * 1000); // 10000 minutes from now
       await store.save();
 
+      console.log('the store id is', storeId);
+      console.log('the product id is', productId);
+
+
        // Add the product to the user's requested_products array
-       await User.findByIdAndUpdate(
+       const updatedUser = await User.findByIdAndUpdate(
         user?._id,
         { $addToSet: { requested_products: { product: productId, store: storeId } } },
         { new: true }
       );
+      console.log(updatedUser);
 
       return res.status(200).json({ message: 'Product reserved successfully', product });
 
@@ -87,10 +94,18 @@ export const addProductRequest = async (req: AuthenticatedRequest, res: Response
         return res.status(404).json({ message: 'Product not found in store.' });
       }
 
-        // Check if the product is reserved by the user
-      if (product.status !== 'reserved' || product.reservedFor?.toString() !== user?._id?.toString()) {
+      if(product.status !== 'reserved') {
+        return res.status(400).json({ message: 'Product is not reserved.' });
+      }
+
+        // Check if the product is reserved by the user or the user is the store owner
+      if ( product.reservedFor?.toString() !== user?._id?.toString() && !(user?.stores.find(store => store.toString() === storeId))) {
         return res.status(400).json({ message: 'Product is not reserved by you.' });
       }
+
+  
+
+    
 
       // Cancel the reservation
       product.status = 'available';
