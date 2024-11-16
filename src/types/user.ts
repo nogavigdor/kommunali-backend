@@ -17,6 +17,7 @@ export interface IUser {
     email: string;
     firstName: string;
     lastName: string;
+    lastCoordinates: [number, number]; // [longitude, latitude]
     stores: Types.ObjectId[]; // Array of store IDs
     requested_products: RequestedProduct[]; // Array of requested products with store references
     updatedAt: Date;
