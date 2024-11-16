@@ -14,6 +14,7 @@ const UserSchema: Schema = new Schema(
     email: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    lastCoordinates: { type: [Number], default: [0, 0] }, // [longitude, latitude]
     stores: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Store' }], // References to owned stores
     requested_products: [
       {
