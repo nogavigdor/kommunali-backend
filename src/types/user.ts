@@ -17,9 +17,14 @@ export interface IUser {
     email: string;
     firstName: string;
     lastName: string;
+    nickname: string;
     lastCoordinates: [number, number]; // [longitude, latitude]
     stores: Types.ObjectId[]; // Array of store IDs
     requested_products: RequestedProduct[]; // Array of requested products with store references
     updatedAt: Date;
   }
   
+  export interface IRegisterUser {
+    email: string;
+    password: string;
+  }
