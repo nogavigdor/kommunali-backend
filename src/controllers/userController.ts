@@ -4,6 +4,7 @@ import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendP
 import firebase from 'firebase/compat/app'; 
 import { FirebaseAuthError } from 'firebase-admin/auth';
 import { AuthenticatedRequest } from '../types/authenticatedRequest';
+import { validateRegistration } from '../validations/userValidation';
 
 
 // Initialize Firebase Client SDK if it hasn't been initialized
@@ -15,7 +16,11 @@ if (!firebase.apps.length) {
 // Register a user using Firebase Admin SDK and create a user profile in the database
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const { email, password, firstName, lastName } = req.body;
+        const { error } = validateRegistration(req.body);
+        if (error) {
+          return res.status(400).json({ errors: error.details.map(detail => ({ message: detail.message })) });
+        }
+        const { email, password} = req.body;
 
         // Create a new user in Firebase Authentication
         const userRecord = await admin.auth().createUser({
@@ -35,8 +40,6 @@ export const registerUser = async (req: Request, res: Response) => {
         const newUser = new User({
             firebaseUserId: firebaseUserId,
             email: userRecord.email, // Use the email from the Firebase user record
-            firstName,
-            lastName,
             stores: [], // Initialize stores as an empty array
             requested_products: [], // Initialize requested_products as an empty array
         });
