@@ -4,7 +4,7 @@ import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendP
 import firebase from 'firebase/compat/app'; 
 import { FirebaseAuthError } from 'firebase-admin/auth';
 import { AuthenticatedRequest } from '../types/authenticatedRequest';
-import { validateRegistration } from '../validations/userValidation';
+import { validateRegistration, validateLogin } from '../validations/userValidation';
 
 
 // Initialize Firebase Client SDK if it hasn't been initialized
@@ -63,8 +63,13 @@ export const registerUser = async (req: Request, res: Response) => {
 };
 
 export const loginUser = async (req: Request, res: Response) => {
-    const { email, password } = req.body;
     
+    const { error } = validateLogin(req.body);
+    if (error) {
+      return res.status(400).json({ errors: error.details.map(detail => ({ message: detail.message })) });
+    }
+    const { email, password } = req.body;
+   
     const auth = getAuth();
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
