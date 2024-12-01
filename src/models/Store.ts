@@ -6,9 +6,9 @@ import { IStore } from '../types/store'; // Import the interface
 const ProductSchema: Schema = new Schema(
   {
     name: { type: String, required: true },
-    description: { type: String, required: true },
+    description: { type: String, required: false },
     price: { type: Number, required: true },
-    imageUrl: { type: String, required: true },
+    imageUrl: { type: String, required: false },
     status: {
       type: String,
       enum: ['available', 'reserved', 'sold', 'hidden'],
@@ -18,7 +18,7 @@ const ProductSchema: Schema = new Schema(
     reservedExpiration: { type: Date, default: null },
     soldTo: { type: mongoose.Schema.Types.ObjectId, default: null },
   },
-  { timestamps: true }
+  { timestamps: true, _id: true  }
 );
 
 // Create a Mongoose schema using the interface
