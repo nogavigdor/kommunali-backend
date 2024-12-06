@@ -5,7 +5,7 @@ import firebase from 'firebase/compat/app';
 import { FirebaseAuthError } from 'firebase-admin/auth';
 import { AuthenticatedRequest } from '../types/authenticatedRequest';
 import { validateRegistration, validateLogin } from '../validations/userValidation';
-
+import type { IStoreModel } from '../models/Store';
 
 // Initialize Firebase Client SDK if it hasn't been initialized
 if (!firebase.apps.length) {
@@ -91,7 +91,7 @@ export const getUserProfile = async (req: AuthenticatedRequest, res: Response) =
             return res.status(401).json({ message: 'Unauthorized: No user ID found' });
         }
 
-        const user = await User.findOne({ firebaseUserId }).populate('stores');
+        const user = await User.findOne({ firebaseUserId }).populate<{ stores: IStoreModel[] }>('stores');
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
