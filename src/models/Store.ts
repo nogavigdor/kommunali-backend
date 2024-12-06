@@ -22,7 +22,7 @@ const ProductSchema: Schema = new Schema(
 );
 
 // Create a Mongoose schema using the interface
-interface IStoreModel extends IStore, Document {
+export interface IStoreModel extends IStore, Document {
   _id: mongoose.Types.ObjectId;
 } // Extend the IStore interface with Document
 
