@@ -4,6 +4,7 @@ import { Store } from '../models/Store';
 import { Types } from 'mongoose';
 import { AuthenticatedRequest, AuthenticatedMongoRequest } from '../types/authenticatedRequest';
 import { User } from '../models/User';
+import { syncProductToAlgolia, deleteProductFromAlgolia } from '../services/algoliaSync'; // Import the Algolia sync function
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
@@ -27,6 +28,11 @@ export const addProduct = async (req: Request, res: Response) => {
     // Push the new product into the store's products array
     store.products.push(newProduct);
     await store.save();
+
+    // Sync the new product to Algolia
+          await syncProductToAlgolia(newProduct, storeId).catch((error) => {
+            console.error('Failed to sync the new product with Algolia:', error);
+          });
 
     // Return the newly added product
     res.status(201).json(newProduct);
@@ -76,6 +82,11 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       console.log('the store id is', storeId);
       console.log('the product id is', productId);
 
+    // Sync the product with the updated reserved status with Algolia
+    await syncProductToAlgolia(product, storeId).catch((error) => {
+      console.error('Failed to sync with Algolia with the product reserved status:', error);
+    });
+
 
        // Add the product to the user's requested_products array
        const updatedUser = await User.findByIdAndUpdate(
@@ -112,6 +123,12 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       product.reservedFor = null;
       product.reservedExpiration = null;
       await store.save();
+      
+
+     // Sync new product available status with Algolia
+     await syncProductToAlgolia(product, storeId).catch((error) => {
+      console.error('Failed to sync product available status with Algolia:', error);
+    });
 
       // Remove the product from the user's requested_products array
       await User.findByIdAndUpdate(
@@ -164,6 +181,11 @@ export const updateProductStatus = async (req: Request, res: Response) => {
       // Update the product status
       product.status = status;
       await store.save();
+
+         // Sync the product with the updated status with Algolia
+    await syncProductToAlgolia(product, storeId).catch((error) => {
+      console.error('Failed to sync the updated product status  with Algolia:', error);
+    });
 
       res.status(200).json(product);
     } catch (error) {
@@ -249,6 +271,11 @@ export const updateProductDetails = async (req: Request, res: Response) => {
       Object.assign(product, updatedData);
       await store.save();
 
+      // Sync the updated product to Algolia
+    await syncProductToAlgolia(product, storeId).catch((error) => {
+      console.error('Failed to sync updated product with Algolia:', error);
+    });
+
       res.status(200).json(product);
     } catch (error) {
       res.status(500).json({ message: 'Failed to update product details', error });
@@ -279,6 +306,11 @@ export const deleteProduct = async (req: Request, res: Response) => {
 
       await product.deleteOne(); // Remove the product
       await store.save();
+
+       // Delete product from Algolia
+       await deleteProductFromAlgolia(productId).catch((error) => {
+        console.error('Failed to delete the product from Algolia:', error);
+      });
 
       res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
