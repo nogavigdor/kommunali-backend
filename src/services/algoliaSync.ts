@@ -1,9 +1,12 @@
 import { algoliaClient } from '../config/algolia';
 //const { productsIndex } = require('../config/algolia');
 import { Store } from '../models/Store';
+import type { IProduct, IProductWithDates } from '../types/product';
 
 // Sync all products of a store to Algolia
-export const syncProductToAlgolia = async (product: any, storeId: string) => {
+export const syncProductToAlgolia = async (product: IProduct, storeId: string) => {
+  const productObj = product as IProductWithDates;
+
   const algoliaObject = {
     objectID: product._id, // Algolia requires an objectID field
     name: product.name,
@@ -12,8 +15,8 @@ export const syncProductToAlgolia = async (product: any, storeId: string) => {
     imageUrl: product.imageUrl,
     status: product.status,
     storeId, // Associates the product with its shop
-    createdAt: product.createdAt,
-    updatedAt: product.updatedAt,
+    createdAt: productObj.createdAt.getTime(),
+    updatedAt: productObj.updatedAt.getTime(),
   };
 
   try {
