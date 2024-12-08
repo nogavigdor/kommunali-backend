@@ -1,4 +1,5 @@
-import { productsIndex } from '../config/algolia';
+import { algoliaClient } from '../config/algolia';
+//const { productsIndex } = require('../config/algolia');
 import { Store } from '../models/Store';
 
 // Sync all products of a store to Algolia
@@ -16,19 +17,33 @@ export const syncProductToAlgolia = async (product: any, storeId: string) => {
   };
 
   try {
-    await productsIndex.saveObject(algoliaObject);
+    await algoliaClient.saveObject({
+      indexName: "products",
+      body: algoliaObject,
+    });
     console.log(`Product synced to Algolia: ${product.name}`);
   } catch (error) {
-    console.error(`Error syncing product to Algolia: ${error.message}`);
+    if (error instanceof Error) {
+      console.error(`Error syncing product to Algolia: ${error.message}`);
+    } else {
+      console.error('Error syncing product to Algolia:', error);
+    }
   }
 };
 
 // Delete a product from Algolia
 export const deleteProductFromAlgolia = async (productId: string) => {
   try {
-    await productsIndex.deleteObject(productId);
+    await algoliaClient.deleteObject({
+      indexName: "products",
+      objectID: productId,
+    });
     console.log(`Product deleted from Algolia: ${productId}`);
   } catch (error) {
-    console.error(`Error deleting product from Algolia: ${error.message}`);
+    if (error instanceof Error) {
+      console.error(`Error deleting product from Algolia: ${error.message}`);
+    } else {
+      console.error('Error deleting product from Algolia:', error);
+    }
   }
 };
