@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IProduct } from '../types/product'; // Importing the interface
+import { IProduct} from '../types/product'; // Importing the interface
 import { Store } from '../models/Store';
 import { Types } from 'mongoose';
 import { AuthenticatedRequest, AuthenticatedMongoRequest } from '../types/authenticatedRequest';
@@ -29,10 +29,13 @@ export const addProduct = async (req: Request, res: Response) => {
 
     // Push the new product into the store's products array
     store.products.push(newProduct);
-    await store.save();
+    // Save the store with the new product
+    const mongoDBStore = await store.save();
+    // Get the newly added product object - which now includes the value of the created and updated dates added by Mongoose
+    const newProductObject = mongoDBStore.products[mongoDBStore.products.length - 1];
 
     // Sync the new product to Algolia
-          await syncProductToAlgolia(newProduct, storeId).catch((error) => {
+          await syncProductToAlgolia(newProductObject, storeId).catch((error) => {
             console.error('Failed to sync the new product with Algolia:', error);
           });
 
