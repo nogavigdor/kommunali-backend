@@ -23,7 +23,9 @@ export const addProduct = async (req: Request, res: Response) => {
     }
 
      // Create a new product subdocument using the Mongoose schema
-     const newProduct: IProduct = { name, description, price, imageUrl, status: 'available', reservedFor: null, reservedExpiration: null };
+     const newProduct: IProduct = {
+       name, description, price, imageUrl, status: 'available',
+        reservedFor: null, reservedExpiration: null };
 
     // Push the new product into the store's products array
     store.products.push(newProduct);
