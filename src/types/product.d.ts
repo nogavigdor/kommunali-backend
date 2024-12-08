@@ -11,3 +11,8 @@ export interface IProduct {
     reservedExpiration: Date | null;
     soldTo?: Types.ObjectId;
   }
+
+  export interface IProductWithDates extends IProduct {
+    createdAt: Date;
+    updatedAt: Date;
+  }
