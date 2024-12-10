@@ -298,19 +298,20 @@ export const deleteProduct = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Store not found.' });
       }
 
-       // Cast products to DocumentArray to use .id() method
-    const productsArray = store.products as Types.DocumentArray<IProduct>;
+// Attempt to find the product in the products array
+const product = store.products.find((p) => p && p._id && p._id.toString() === productId);
+if (!product) {
+  console.log('Product not found in store.');
+  return res.status(404).json({ message: 'Product not found in store.' });
+}
 
-      // Remove the product from the store's products array
-      const product = productsArray.id(productId);
-      if (!product) {
-        return res.status(404).json({ message: 'Product not found in store.' });
-      }
+// Output the found product for confirmation
+console.log('Found product:', product);
 
-     
 
-      await product.deleteOne(); // Remove the product
-      await store.save();
+    // Remove the product from the products array
+    store.products = store.products.filter(p => p._id?.toString() !== productId);
+    await store.save();
 
        // Delete product from Algolia
        await deleteProductFromAlgolia(productId).catch((error) => {
@@ -319,6 +320,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
 
       res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
+      console.error('Error details:', error);
       res.status(500).json({ message: 'Failed to delete product', error });
     }
   };
