@@ -1,7 +1,12 @@
+import { dot } from 'node:test/reporters';
 import { algoliaClient } from '../config/algolia';
 //const { productsIndex } = require('../config/algolia');
 import { Store } from '../models/Store';
 import type { IProduct, IProductWithDates } from '../types/product';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const ALGOLIA_INDEX_NAME = process.env.ALGOLIA_INDEX_NAME ?? "dev_kommunali_products";
 
 // Sync all products of a store to Algolia
 export const syncProductToAlgolia = async (product: IProduct, storeId: string) => {
@@ -21,7 +26,7 @@ export const syncProductToAlgolia = async (product: IProduct, storeId: string) =
 
   try {
     await algoliaClient.saveObject({
-      indexName: "products",
+      indexName: ALGOLIA_INDEX_NAME,
       body: algoliaObject,
     });
     console.log(`Product synced to Algolia: ${product.name}`);
@@ -38,7 +43,7 @@ export const syncProductToAlgolia = async (product: IProduct, storeId: string) =
 export const deleteProductFromAlgolia = async (productId: string) => {
   try {
     await algoliaClient.deleteObject({
-      indexName: "products",
+      indexName: ALGOLIA_INDEX_NAME,
       objectID: productId,
     });
     console.log(`Product deleted from Algolia: ${productId}`);
