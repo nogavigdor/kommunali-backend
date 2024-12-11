@@ -109,7 +109,7 @@ export const updateUserProfile = async (req: AuthenticatedRequest, res: Response
         const firebaseUserId = req.user?.uid; 
         const updatedData = req.body;
 
-        const updatedUser = await User.findOneAndUpdate({ firebaseUserId }, updatedData, { new: true });
+        const updatedUser = await User.findOneAndUpdate({ firebaseUserId }, updatedData, { new: true }).populate<{stores: IStoreModel[]}>('stores');
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
