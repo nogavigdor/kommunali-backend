@@ -37,7 +37,13 @@ async function importProducts() {
     // Flatten the products from all stores into a single array
     const products = stores.flatMap(store =>
       store.products.map(product => ({
-        ...product,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        status: product.status,
+        createdAt: new Date((product as any).createdAt).getTime(),
+        updatedAt: new Date((product as any).updatedAt).getTime(),
         storeId: store._id,          // Include the store ID for reference
         objectID: product._id, // Algolia requires a unique `objectID`
       }))
