@@ -32,15 +32,15 @@ export const addProduct = async (req: Request, res: Response) => {
     // Save the store with the new product
     const mongoDBStore = await store.save();
     // Get the newly added product object - which now includes the value of the created and updated dates added by Mongoose
-    const newProductObject = mongoDBStore.products[mongoDBStore.products.length - 1];
+    const returnedNewProduct = mongoDBStore.products[mongoDBStore.products.length - 1];
 
     // Sync the new product to Algolia
-          await syncProductToAlgolia(newProductObject, storeId).catch((error) => {
+          await syncProductToAlgolia(returnedNewProduct, storeId).catch((error) => {
             console.error('Failed to sync the new product with Algolia:', error);
           });
 
     // Return the newly added product
-    res.status(201).json(newProduct);
+    res.status(201).json(returnedNewProduct);
   } catch (error) {
     res.status(500).json({ message: 'Failed to add product', error });
   }
