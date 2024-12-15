@@ -6,7 +6,7 @@ export interface IProduct {
     price: number;
     imageUrl: string;
     status: 'available' | 'reserved' | 'sold' | 'hidden';
-
+    requestQueue: { user: Types.ObjectId, timestamp: Date }[];
     reservedFor: Types.ObjectId |  null;
     reservedExpiration: Date | null;
     soldTo?: Types.ObjectId;
