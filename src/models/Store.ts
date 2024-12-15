@@ -15,8 +15,8 @@ const ProductSchema: Schema = new Schema(
       default: 'available',
     },
     requestQueue: [{ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, timestamp: { type: Date, default: Date.now } }],
-    reservedFor: { type: mongoose.Schema.Types.ObjectId, default: null },
-    reservedExpiration: { type: Date, default: null },
+    //reservedFor: { type: mongoose.Schema.Types.ObjectId, default: null },
+    //reservedExpiration: { type: Date, default: null },
     soldTo: { type: mongoose.Schema.Types.ObjectId, default: null },
   },
   { timestamps: true, _id: true  }
