@@ -24,7 +24,7 @@ export const addProduct = async (req: Request, res: Response) => {
 
      // Create a new product subdocument using the Mongoose schema
      const newProduct: IProduct = {
-       name, description, price, imageUrl, status: 'available',
+       name, description, price, imageUrl, status: 'available', requestQueue: [],
         reservedFor: null, reservedExpiration: null };
 
     // Push the new product into the store's products array
@@ -197,6 +197,71 @@ export const updateProductStatus = async (req: Request, res: Response) => {
       res.status(500).json({ message: 'Failed to update product status', error });
     }
   };
+
+  // Approve a product request
+export const approveProductRequest = async (req: Request, res: Response) => {
+    try {
+      const { storeId, productId } = req.params;
+      const { userId } = req.body;
+  
+      // Find the store
+      const store = await Store.findById(storeId);
+      if (!store) {
+        return res.status(404).json({ message: 'Store not found.' });
+      }
+
+      // Find the product in the store's products array
+      const product = store.products.find(product => product._id?.toString() === productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found in store.' });
+      }
+
+      // Checks if the product is available
+      if (product.status === 'sold'|| product.status === 'hidden') {
+        return res.status(400).json({ message: 'Product is already sold and cannot be reserved.' });
+      }
+
+      // Find the user by ID
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      // Check if the user has requested the product
+      const requestedProduct = user.requested_products.find(p => p.product.toString() === productId);
+      if (!requestedProduct) {
+        return res.status(400).json({ message: 'User has not requested this product.' });
+      }
+
+      const firstInQueue = product.requestQueue[0];
+      if (!firstInQueue || firstInQueue.user.toString() !== userId) {
+        return res.status(400).json({ message: 'User is not first in the queue.' });
+      }
+
+      // Update the product status
+      product.status = 'reserved';
+      product.reservedFor = userId.toString();
+      product.reservedExpiration = new Date(Date.now() + 10000 * 60 * 1000); // 10000 minutes from now
+      await store.save();
+
+      // Remove the product from the user's requested_products array
+      await User.findByIdAndUpdate(
+        userId,
+        { $pull: { requested_products: { product: productId } } },
+        { new: true }
+      );
+
+      // Sync the product with the updated status with Algolia
+      await syncProductToAlgolia(product, storeId).catch((error) => {
+        console.error('Failed to sync the updated product status with Algolia:', error);
+      });
+
+      res.status(200).json({ message: 'Product was reserved successfully', product });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to approve product request', error });
+    }
+  }
+
 
  // Get all products with optional filtering and pagination
 export const getAllProducts = async (req: Request, res: Response) => {
