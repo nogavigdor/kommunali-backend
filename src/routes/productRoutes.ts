@@ -2,7 +2,7 @@ import express from 'express';
 import {
   addProduct,
   addProductRequest,
-  approveProductRequest,
+ // approveProductRequest,
   getAllProducts,
   getProductById,
   updateProductDetails,
@@ -23,7 +23,7 @@ router.post('/', verifyToken, verifyStoreOwner, addProduct);
 router.put('/:productId/request', verifyToken, addMongoUserToRequest, addProductRequest);
 
 // Approve a request for a specific product (only the store owner can approve requests)
-router.put('/:productId/approve', verifyToken, verifyStoreOwner, approveProductRequest);
+//router.put('/:productId/approve', verifyToken, verifyStoreOwner, approveProductRequest);
 
 // Get all products (with optional filtering)
 router.get('/', getAllProducts);
@@ -35,6 +35,7 @@ router.get('/:productId', getProductById);
 router.put('/:productId', verifyToken, verifyStoreOwner, updateProductDetails);
 
 // Update product status (PATCH for partial update) - in case the owner wants to change the status of the product
+//to sold/hidden/available - but not reserved  (only the store owner can update the status)
 router.patch('/:productId', verifyToken, verifyStoreOwner, updateProductStatus);
 
 // Delete a product
