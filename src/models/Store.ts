@@ -14,6 +14,7 @@ const ProductSchema: Schema = new Schema(
       enum: ['available', 'reserved', 'sold', 'hidden'],
       default: 'available',
     },
+    requestQueue: [{ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, timestamp: { type: Date, default: Date.now } }],
     reservedFor: { type: mongoose.Schema.Types.ObjectId, default: null },
     reservedExpiration: { type: Date, default: null },
     soldTo: { type: mongoose.Schema.Types.ObjectId, default: null },
