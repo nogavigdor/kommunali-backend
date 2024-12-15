@@ -7,8 +7,8 @@ export interface IProduct {
     imageUrl: string;
     status: 'available' | 'reserved' | 'sold' | 'hidden';
     requestQueue: { user: Types.ObjectId, timestamp: Date }[];
-    reservedFor: Types.ObjectId |  null;
-    reservedExpiration: Date | null;
+   // reservedFor: Types.ObjectId |  null;
+    //reservedExpiration: Date | null;
     soldTo?: Types.ObjectId;
   }
 
