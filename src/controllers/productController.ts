@@ -5,6 +5,7 @@ import { Types } from 'mongoose';
 import { AuthenticatedRequest, AuthenticatedMongoRequest } from '../types/authenticatedRequest';
 import { User } from '../models/User';
 import { syncProductToAlgolia, deleteProductFromAlgolia } from '../services/algoliaSync'; // Import the Algolia sync function
+import mongoose from 'mongoose';
 
 export const addProduct = async (req: Request, res: Response) => {
   try {
@@ -25,7 +26,8 @@ export const addProduct = async (req: Request, res: Response) => {
      // Create a new product subdocument using the Mongoose schema
      const newProduct: IProduct = {
        name, description, price, imageUrl, status: 'available', requestQueue: [],
-        reservedFor: null, reservedExpiration: null };
+     //   reservedFor: null, reservedExpiration: null
+      };
 
     // Push the new product into the store's products array
     store.products.push(newProduct);
@@ -46,16 +48,19 @@ export const addProduct = async (req: Request, res: Response) => {
   }
 };
 
-//Add A product request with the ability to reserve and cancel reservation
+//Add/update A product request with the ability to reserve and cancel reservation
 export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Response) => {
   try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     const { storeId, productId } = req.params;
     //retrieving the user details which was added to the request object by the verifyToken middleware
     const user = req.mongoUser;
     const { action } = req.body;
 
     // Find the store by ID
-    const store = await Store.findById(storeId);
+    const store = await Store.findById(storeId).session(session);
     if (!store) {
       return res.status(404).json({ message: 'Store not found.' });
     }
@@ -64,7 +69,9 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       return res.status(400).json({ message: 'Product ID is required.' });
     }
 
-    if ( action === 'reserve') {
+
+
+    if ( action === 'request') {
       // Find the product in the store's products array
       const product = store.products.find(product => product._id?.toString() === productId);
       if (!product) {
@@ -72,12 +79,30 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       }
 
       // Check if the product is available
-      if (product.status !== 'available') {
+      if (product.status == 'sold' || product.status == 'hidden') {
         return res.status(400).json({ message: 'Product is not available.' });
       }
 
       console.log('the user id is', user?._id);
 
+ // Add user to the queue
+ const existingRequest = user && user._id ? product.requestQueue?.find(entry => entry.user?.toString() === user._id?.toString()) : null;
+ if (existingRequest) {
+   return res.status(400).json({ message: 'You have already requested this product.' });
+ }
+
+ if (user && user._id) {
+   product.requestQueue.push({ user: user._id, timestamp: new Date() });
+   product.status = 'reserved';
+ } else {
+   return res.status(400).json({ message: 'User ID is missing.' });
+ }
+ await store.save({session});
+
+ // update the user position in the queue
+ const position = user && user._id ? product.requestQueue.findIndex(entry => entry.user?.toString() === user._id?.toString()) + 1 : -1;
+ /*
+ return res.status(200).json({ message: `You have been added to the queue. Your position is ${position}.` });
       // Reserve the product for the user
       product.status = 'reserved';
       product.reservedFor = user?._id ?? null;
@@ -86,7 +111,7 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
 
       console.log('the store id is', storeId);
       console.log('the product id is', productId);
-
+*/
     // Sync the product with the updated reserved status with Algolia
     await syncProductToAlgolia(product, storeId).catch((error) => {
       console.error('Failed to sync with Algolia with the product reserved status:', error);
@@ -97,11 +122,13 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
        const updatedUser = await User.findByIdAndUpdate(
         user?._id,
         { $addToSet: { requested_products: { product: productId, store: storeId } } },
-        { new: true }
+        { session, new: true }
       );
       console.log(updatedUser);
 
-      return res.status(200).json({ message: 'Product reserved successfully', product });
+    //  return res.status(200).json({ message: 'Product reserved successfully', product });
+    session.commitTransaction();
+    return res.status(200).json({ message: `You have been added to the queue. Your position is ${position}.` });
 
     } else if (action === 'cancel') {
       // Find the product in the store's products array
@@ -114,20 +141,20 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
         return res.status(400).json({ message: 'Product is not reserved.' });
       }
 
+      // Find the product's index
+      const requestIndex = product.requestQueue.findIndex(entry => entry.user?.toString() === user?._id?.toString());
+
         // Check if the product is reserved by the user or the user is the store owner
-      if ( product.reservedFor?.toString() !== user?._id?.toString() && !(user?.stores.find(store => store.toString() === storeId))) {
-        return res.status(400).json({ message: 'Product is not reserved by you.' });
+      if (requestIndex === -1) {
+        return res.status(400).json({ message: 'Product cannot be cancelled by you.' });
       }
 
-  
-
-    
-
       // Cancel the reservation
-      product.status = 'available';
-      product.reservedFor = null;
-      product.reservedExpiration = null;
-      await store.save();
+      product.requestQueue.splice(requestIndex, 1);
+      if (product.requestQueue.length === 0) {
+        product.status = 'available';
+      }
+      await store.save({session});
       
 
      // Sync new product available status with Algolia
@@ -139,9 +166,10 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       await User.findByIdAndUpdate(
         user?._id,
         { $pull: { requested_products: { product: productId } } },
-        { new: true }
+        { session, new: true },
       );
 
+      session.commitTransaction();
       return res.status(200).json({ message: 'Product reservation canceled', product });
       
    
@@ -157,14 +185,17 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
 }
 
 
-// Update product status (available, reserved, sold, hidden)
+// Update product status by the store owner (available, sold, hidden.but not reserver)
 export const updateProductStatus = async (req: Request, res: Response) => {
       try {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+    
         const { storeId, productId } = req.params;
-        const { status } = req.body; // Expected to be one of: "available", "reserved", "sold", "hidden"
+        const { status } = req.body; // Expected to be one of: "available",  "sold", "hidden"
     
         // Validate status
-        if (!['available', 'reserved', 'sold', 'hidden'].includes(status)) {
+        if (!['available', 'sold', 'hidden'].includes(status)) {
           return res.status(400).json({ message: 'Invalid status value' });
         }
     
@@ -183,14 +214,33 @@ export const updateProductStatus = async (req: Request, res: Response) => {
         return res.status(404).json({ message: 'Product not found in store.' });
       }
 
+      //delete the product from the request queue of the users who requested it
+      for (const request of product.requestQueue) {
+      const user = await User.findById(request.user, {$session: session});
+      if (user) {
+        // Remove the product from the user's requested_products array
+        await User.findByIdAndUpdate(
+          user._id,
+          { $pull: { requested_products: { product: productId } } },
+          { session, new: true }
+        );
+      }
+    }
+
+    // Clear the request queue
+    product.requestQueue = [];
+
+
       // Update the product status
       product.status = status;
-      await store.save();
+      await store.save({session});
 
          // Sync the product with the updated status with Algolia
     await syncProductToAlgolia(product, storeId).catch((error) => {
       console.error('Failed to sync the updated product status  with Algolia:', error);
     });
+
+      session.commitTransaction();
 
       res.status(200).json(product);
     } catch (error) {
@@ -198,7 +248,7 @@ export const updateProductStatus = async (req: Request, res: Response) => {
     }
   };
 
-  // Approve a product request
+  // Approve a product request - currently not implemented
 export const approveProductRequest = async (req: Request, res: Response) => {
     try {
       const { storeId, productId } = req.params;
@@ -240,8 +290,8 @@ export const approveProductRequest = async (req: Request, res: Response) => {
 
       // Update the product status
       product.status = 'reserved';
-      product.reservedFor = userId.toString();
-      product.reservedExpiration = new Date(Date.now() + 10000 * 60 * 1000); // 10000 minutes from now
+      // product.reservedFor = userId.toString();
+     //  product.reservedExpiration = new Date(Date.now() + 10000 * 60 * 1000); // 10000 minutes from now
       await store.save();
 
       // Remove the product from the user's requested_products array
