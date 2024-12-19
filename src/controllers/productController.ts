@@ -119,7 +119,7 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
 
     //  return res.status(200).json({ message: 'Product reserved successfully', product });
     session.commitTransaction();
-    return res.status(200).json({ message: `You have been added to the queue. Your position is ${position}.` });
+    return res.status(200).json(product);
 
     } else if (action === 'cancel') {
       // Find the product in the store's products array
@@ -160,7 +160,7 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       );
 
       session.commitTransaction();
-      return res.status(200).json({ message: 'Product reservation canceled', product });
+      return res.status(200).json(product);
       
    
     } else {
