@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
 import storeRoutes from './routes/storeRoutes';
 import productRoutes from './routes/productRoutes';
+import chatRoutes from './routes/chatRoutes';
 import setupSwagger from './swagger'; // Import Swagger setup
 import cors from 'cors';
 
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 
 // Use routes
 app.use('/api/users', userRoutes);
+app.use('/api/chats', chatRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/stores/:storeId/products', productRoutes);
 
