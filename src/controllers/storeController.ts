@@ -19,9 +19,11 @@ export const createStore = async (req: AuthenticatedRequest, res: Response) => {
         }
 
         const owner = user._id;
+        const ownerFirebaseId = firebaseUserId;
 
         const newStore = new Store({
             owner,
+            ownerFirebaseId,
             name,
             description,
             location,
