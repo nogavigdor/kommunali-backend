@@ -21,6 +21,8 @@ export interface IUser {
     lastCoordinates: [number, number]; // [longitude, latitude]
     stores: Types.ObjectId[]; // Array of store IDs
     requested_products: RequestedProduct[]; // Array of requested products with store references
+    // Array of chat references to chats initiated by the user
+    chatsInitiated: { shopId: Types.ObjectId; chatFirebaseId: string }[]; 
     updatedAt: Date;
   }
   
