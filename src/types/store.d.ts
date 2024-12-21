@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 export interface IStore {
     _id?: Types.ObjectId; 
     owner: string; // User ID as a string
+    ownerFirebaseId: string;
     name: string;
     description: string;
     location: {
