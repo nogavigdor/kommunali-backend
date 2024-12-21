@@ -22,6 +22,10 @@ const UserSchema: Schema = new Schema(
         store: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' }, // Reference to the Store
       },
     ],
+    chatsInitiated: [{ 
+      shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Store' }, // Reference to the Store
+      chatFirebaseId: { type: String, required: true },
+    }], // References to chats
   },
   { timestamps: true } // Automatically manages createdAt and updatedAt fields
 );
