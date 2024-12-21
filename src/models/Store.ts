@@ -32,6 +32,7 @@ export interface IStoreModel extends IStore, Document {
 const StoreSchema: Schema = new Schema(
   {
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    ownerFirebaseId: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String },
     location: {
