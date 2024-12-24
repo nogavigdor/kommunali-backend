@@ -16,7 +16,9 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 // Enable CORS
 app.use(cors({
-  origin: "http://localhost:3000", // Allow requests from the localhost and production host
+  origin: "http://localhost:3000", 
+  'https://kommunali-frontend.onrender.com',
+  // // Allow requests from the localhost and production host
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization", // Allowed headers
   credentials: true, // Allow sending cookies with requests
