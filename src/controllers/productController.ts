@@ -4,7 +4,8 @@ import { Store } from '../models/Store';
 import { Types } from 'mongoose';
 import { AuthenticatedRequest, AuthenticatedMongoRequest } from '../types/authenticatedRequest';
 import { User } from '../models/User';
-import { syncProductToAlgolia, deleteProductFromAlgolia } from '../services/algoliaSync'; // Import the Algolia sync function
+//import { syncProductToAlgolia, deleteProductFromAlgolia } from '../services/algoliaSync'; // Import the Algolia sync function
+import { syncProductToTypesense, deleteProductFromTypesense } from '../services/typesenseSync';
 import mongoose from 'mongoose';
 
 export const addProduct = async (req: Request, res: Response) => {
@@ -36,9 +37,9 @@ export const addProduct = async (req: Request, res: Response) => {
     // Get the newly added product object - which now includes the value of the created and updated dates added by Mongoose
     const returnedNewProduct = mongoDBStore.products[mongoDBStore.products.length - 1];
 
-    // Sync the new product to Algolia
-          await syncProductToAlgolia(returnedNewProduct, storeId).catch((error) => {
-            console.error('Failed to sync the new product with Algolia:', error);
+    // Sync the new product to Typesense
+          await syncProductToTypesense(returnedNewProduct, storeId).catch((error) => {
+            console.error('Failed to sync the new product with Typesense:', error);
           });
 
     // Return the newly added product
@@ -104,8 +105,8 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       console.log('the product id is', productId);
 */
     // Sync the product with the updated reserved status with Algolia
-    await syncProductToAlgolia(product, storeId).catch((error) => {
-      console.error('Failed to sync with Algolia with the product reserved status:', error);
+    await syncProductToTypesense(product, storeId).catch((error) => {
+      console.error('Failed to sync with Typesense with the product reserved status:', error);
     });
 
 
@@ -147,9 +148,9 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
       }
       await store.save({session});
       
-     // Sync new product available status with Algolia
-     await syncProductToAlgolia(product, storeId).catch((error) => {
-      console.error('Failed to sync product available status with Algolia:', error);
+     // Sync new product available status with Typesense
+     await syncProductToTypesense(product, storeId).catch((error) => {
+      console.error('Failed to sync product available status with Typesense:', error);
     });
 
       // Remove the product from the user's requested_products array
@@ -216,8 +217,8 @@ export const updateProductStatus = async (req: Request, res: Response) => {
       product.status = status;
       await store.save({session});
          // Sync the product with the updated status with Algolia
-    await syncProductToAlgolia(product, storeId).catch((error) => {
-      console.error('Failed to sync the updated product status  with Algolia:', error);
+    await syncProductToTypesense(product, storeId).catch((error) => {
+      console.error('Failed to sync the updated product status  with Typesense:', error);
     });
       session.commitTransaction();
       res.status(200).json(product);
@@ -279,9 +280,9 @@ export const approveProductRequest = async (req: Request, res: Response) => {
         { new: true }
       );
 
-      // Sync the product with the updated status with Algolia
-      await syncProductToAlgolia(product, storeId).catch((error) => {
-        console.error('Failed to sync the updated product status with Algolia:', error);
+      // Sync the product with the updated status with Typesense
+      await syncProductToTypesense(product, storeId).catch((error) => {
+        console.error('Failed to sync the updated product status with Typesense:', error);
       });
 
       res.status(200).json({ message: 'Product was reserved successfully', product });
@@ -370,8 +371,8 @@ export const updateProductDetails = async (req: Request, res: Response) => {
       await store.save();
 
       // Sync the updated product to Algolia
-    await syncProductToAlgolia(product, storeId).catch((error) => {
-      console.error('Failed to sync updated product with Algolia:', error);
+    await syncProductToTypesense(product, storeId).catch((error) => {
+      console.error('Failed to sync updated product with Typesense:', error);
     });
 
       res.status(200).json(product);
@@ -406,9 +407,9 @@ console.log('Found product:', product);
     store.products = store.products.filter(p => p._id?.toString() !== productId);
     await store.save();
 
-       // Delete product from Algolia
-       await deleteProductFromAlgolia(productId).catch((error) => {
-        console.error('Failed to delete the product from Algolia:', error);
+       // Delete product from Typesense
+       await deleteProductFromTypesense(productId).catch((error) => {
+        console.error('Failed to delete the product from Typesense:', error);
       });
 
       res.status(200).json({ message: 'Product deleted successfully' });
