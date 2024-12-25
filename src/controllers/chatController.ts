@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
+import { Store } from '../models/Store';
 import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from '../config/firebase'; // Import Firebase Admin SDK
 import firebase from 'firebase/compat/app'; 
 import { FirebaseAuthError } from 'firebase-admin/auth';
@@ -23,6 +24,11 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
         if (!firebaseUserId) {
             return res.status(401).json({ message: 'Unauthorized: No user ID found' });
         }
+
+        const shop = await Store.findOne({_id: shopId});
+        if (!shop) {
+            return res.status(404).json({ message: 'Shop not found' });
+        }
         // Create a new chat document in Firestore
         const fireStore = admin.firestore();
         const shopDoc = fireStore.collection('shopChats').doc(shopId);
@@ -31,6 +37,7 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
         const chatDoc = await chatsCollection.add({
             customer: firebaseUserId,
             product: productId,
+            shopOwner: shop.ownerFirebaseId,
         });
         // Update the user profile with the new chat
         const user = await User.findOneAndUpdate({ firebaseUserId }, {
