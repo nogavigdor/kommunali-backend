@@ -36,6 +36,7 @@
     "mongoose": "^8.6.2",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "typesense": "^1.8.2",
     "yamljs": "^0.3.0"
   }
 }
