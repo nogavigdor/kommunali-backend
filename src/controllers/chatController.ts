@@ -17,7 +17,7 @@ if (!firebase.apps.length) {
 export const createChat = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { shopId, productId } = req.body;
-        if (!shopId || !productId) {
+        if (!shopId) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
         const firebaseUserId = req.user?.uid;
@@ -36,8 +36,11 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
         // Add a new chat document to the chats collection
         const chatDoc = await chatsCollection.add({
             customer: firebaseUserId,
+            //currently wil be assigned with undefined
+            //as product id is not yet implemented in xhat
             product: productId,
             shopOwner: shop.ownerFirebaseId,
+            messages: [],
         });
         // Update the user profile with the new chat
         const user = await User.findOneAndUpdate({ firebaseUserId }, {
@@ -47,9 +50,10 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
                     chatFirebaseId: chatDoc.id,
                 },
             },
-        });
+        }, { new: true });
         res.status(200).json({ user });
     } catch (error) {
+        console.error('Error creating chat:', error);
         res.status(500).json({ message: 'Failed to create chat', error });
     }
 };
