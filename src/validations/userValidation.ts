@@ -10,6 +10,10 @@ export const userRegistrationSchema = Joi.object({
     'string.min': 'Password must be at least 8 characters',
     'string.empty': 'Password is required',
   }),
+  nickname: Joi.string().min(3).required().messages({
+    'string.min': 'Password must be at least 3 characters',
+    'string.empty': 'Nickname is required',
+  }),
 
 });
 

@@ -11,6 +11,7 @@ const UserSchema: Schema = new Schema(
   {
     firebaseUserId: { type: String, required: true },
     role: { type: String, default: 'user' },
+    nickname: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     firstName: { type: String, optional: true },
     lastName: { type: String, optional: true },

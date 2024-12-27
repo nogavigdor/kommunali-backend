@@ -20,10 +20,12 @@ export const registerUser = async (req: Request, res: Response) => {
         if (error) {
           return res.status(400).json({ errors: error.details.map(detail => ({ message: detail.message })) });
         }
-        const { email, password} = req.body;
+        const { nickname, email, password} = req.body;
 
         // Create a new user in Firebase Authentication
         const userRecord = await admin.auth().createUser({
+            //displayName is the known property in firebase for nickname
+            displayName: nickname,
             email: email,
             password: password,
         });
@@ -39,6 +41,7 @@ export const registerUser = async (req: Request, res: Response) => {
         // Create a new user profile in the database using Firebase UID
         const newUser = new User({
             firebaseUserId: firebaseUserId,
+            nickname: userRecord.displayName, // Use the display name from the Firebase user record
             email: userRecord.email, // Use the email from the Firebase user record
             stores: [], // Initialize stores as an empty array
             requested_products: [], // Initialize requested_products as an empty array
