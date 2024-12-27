@@ -17,7 +17,10 @@ const PORT = process.env.PORT || 4000;
 // Enable CORS
 app.use(cors({
   origin: ["http://localhost:3000", 'https://kommunali-frontend.onrender.com',
-   'https://kommunali.com','https://www.kommunali.com'],
+   'https://kommunali.com','https://www.kommunali.com',
+   'https://kommunali-frontend1.onrender.com', 
+   'https://test.kommunali.com', 'https://www.test.kommunali.com'],
+
   // // Allow requests from the localhost and production host
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
   allowedHeaders: "Origin,X-Requested-With,Content-Type,Accept,Authorization", // Allowed headers
