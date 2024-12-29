@@ -92,7 +92,7 @@ export const addProductRequest = async (req: AuthenticatedMongoRequest, res: Res
  await store.save({session});
 
  // update the user position in the queue
- const position = user && user._id ? product.requestQueue.findIndex(entry => entry.user?.toString() === user._id?.toString()) + 1 : -1;
+ //const position = user && user._id ? product.requestQueue.findIndex(entry => entry.user?.toString() === user._id?.toString()) + 1 : -1;
  /*
  return res.status(200).json({ message: `You have been added to the queue. Your position is ${position}.` });
       // Reserve the product for the user
