@@ -51,7 +51,12 @@ async function populateTypesense() {
       await typesenseClient.collections(TYPESENSE_COLLECTION_NAME).delete();
       console.log(`Deleted existing collection: ${TYPESENSE_COLLECTION_NAME}`);
     } catch (err) {
-      console.log('Collection does not exist or could not be deleted:', err.message);
+        if (err instanceof Error) {
+            console.log('Collection does not exist or could not be deleted:', err.message);
+          } else {
+            console.log('Collection does not exist or could not be deleted:', err);
+          }
+          
     }
 
     await typesenseClient.collections().create(typesenseSchema);
