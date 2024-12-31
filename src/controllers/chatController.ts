@@ -29,6 +29,7 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
         if (!shop) {
             return res.status(404).json({ message: 'Shop not found' });
         }
+        const shopOwnerUser = await User.findOne({firebaseUserId: shop.ownerFirebaseId});
         // Create a new chat document in Firestore
         const fireStore = admin.firestore();
         const shopDoc = fireStore.collection('shopChats').doc(shopId);
@@ -36,10 +37,12 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
         // Add a new chat document to the chats collection
         const chatDoc = await chatsCollection.add({
             customer: firebaseUserId,
+            customerNickname: req.user?.displayName,
             //currently wil be assigned with undefined
             //as product id is not yet implemented in xhat
             product: productId,
             shopOwner: shop.ownerFirebaseId,
+            shopOwnerNickname: shopOwnerUser?.nickname,
             messages: [],
         });
         // Update the user profile with the new chat
@@ -51,7 +54,7 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
                 },
             },
         }, { new: true });
-        res.status(200).json({ user });
+        res.status(200).json(user);
     } catch (error) {
         console.error('Error creating chat:', error);
         res.status(500).json({ message: 'Failed to create chat', error });
