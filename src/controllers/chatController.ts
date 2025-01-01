@@ -37,12 +37,13 @@ export const createChat = async (req: AuthenticatedRequest, res: Response) => {
         // Add a new chat document to the chats collection
         const chatDoc = await chatsCollection.add({
             customer: firebaseUserId,
-            customerNickname: req.user?.displayName,
+            //in the token the displayName is represented by the name property
+            customerNickname: req.user?.name,
             //currently wil be assigned with undefined
             //as product id is not yet implemented in xhat
             product: productId,
             shopOwner: shop.ownerFirebaseId,
-            shopOwnerNickname: shopOwnerUser?.nickname,
+            shopOwnerNickname: shopOwnerUser?.nickname ?? "Shop Owner",
             messages: [],
         });
         // Update the user profile with the new chat
