@@ -4,7 +4,7 @@ import { admin, firebaseClientConfig, getAuth, signInWithEmailAndPassword, sendP
 import firebase from 'firebase/compat/app'; 
 import { FirebaseAuthError } from 'firebase-admin/auth';
 import { AuthenticatedRequest } from '../types/authenticatedRequest';
-import { validateRegistration, validateLogin } from '../validations/userValidation';
+import { validateRegistration, validateSocialRegistration, validateLogin } from '../validations/userValidation';
 import type { IStoreModel } from '../models/Store';
 
 // Initialize Firebase Client SDK if it hasn't been initialized
@@ -16,31 +16,46 @@ if (!firebase.apps.length) {
 // Register a user using Firebase Admin SDK and create a user profile in the database
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const { error } = validateRegistration(req.body);
+        const validator = req.body.firebaseUserId ? validateSocialRegistration : validateRegistration;
+
+        const { error } = validator(req.body);
         if (error) {
           return res.status(400).json({ errors: error.details.map(detail => ({ message: detail.message })) });
         }
-        const { nickname, email, password} = req.body;
+        const { nickname, email, password, firebaseUserId} = req.body;
 
-        // Create a new user in Firebase Authentication
-        const userRecord = await admin.auth().createUser({
-            //displayName is the known property in firebase for nickname
-            displayName: nickname,
-            email: email,
-            password: password,
-        });
+        let userRecord;
 
-        const firebaseUserId = userRecord.uid;
+        if (firebaseUserId) {
+            // If firebaseUserId is provided (Social Login case), retrieve the Firebase user record
+            try {
+                userRecord = await admin.auth().getUser(firebaseUserId);
+                await admin.auth().updateUser(firebaseUserId, { displayName: nickname });
+            } catch (error) {
+                return res.status(400).json({ message: "Invalid Firebase UID" });
+            }
+        } else {
+            // Create a new user in Firebase (Email/Password registration case)
+            userRecord = await admin.auth().createUser({
+                //displayName is the known property in firebase for nickname
+                displayName: nickname,
+                email: email,
+                password: password,
+            });
+        }
+
+        //if its a social media registration, the firebaseUserId will be the one provided in the request
+        const userId = firebaseUserId || userRecord.uid;
 
         // Check if the user profile already exists in the database
-        const existingUser = await User.findOne({firebaseUserId});
+        const existingUser = await User.findOne({userId});
         if (existingUser) {
             return res.status(400).json({ message: 'User profile already exists in mongodb' });
         }
 
         // Create a new user profile in the database using Firebase UID
         const newUser = new User({
-            firebaseUserId: firebaseUserId,
+            firebaseUserId: userId,
             nickname: userRecord.displayName, // Use the display name from the Firebase user record
             email: userRecord.email, // Use the email from the Firebase user record
             stores: [], // Initialize stores as an empty array
